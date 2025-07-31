@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'DetailScreen.dart';
 
-class BuildPageScreen extends StatefulWidget {
+class AddItemScreen extends StatefulWidget {
   @override
-  _BuildPageScreenState createState() => _BuildPageScreenState();
+  _AddItemScreenState createState() => _AddItemScreenState();
 }
 
-class _BuildPageScreenState extends State<BuildPageScreen> {
+class _AddItemScreenState extends State<AddItemScreen> {
   List<Map<String, dynamic>> allItems = [
     {"item": "Operating System", "name": "os", "added": false, "partname": "", "price": 0.0},
     {"item": "Wireless Network Card", "name": "wirelessnetworkcard", "added": false, "partname": "", "price": 0.0},

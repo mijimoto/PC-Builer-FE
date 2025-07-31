@@ -3,6 +3,7 @@ import 'sign_up_screen.dart';
 import 'forgot_password_page.dart';
 import 'package:http/http.dart' as http; // For API calls
 import 'dart:convert'; // For JSON encoding
+import 'home_page.dart';
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({Key? key}) : super(key: key);
@@ -40,7 +41,7 @@ class _LogInScreenState extends State<LogInScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/login'),
+        Uri.parse('http://localhost:8080/api/v1/accounts/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
@@ -49,12 +50,16 @@ class _LogInScreenState extends State<LogInScreen> {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Giả định API trả về token hoặc thông tin người dùng khi đăng nhập thành công
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đăng nhập thành công!'),
+            content: Text('Login Successfully'),
             duration: Duration(seconds: 2),
           ),
+        );
+        // Navigate to HomePage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePageScreen()),
         );
         // Có thể lưu token hoặc điều hướng đến màn hình chính (nếu có)
       } else {
@@ -75,20 +80,6 @@ class _LogInScreenState extends State<LogInScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // ✅ X (Close) Button
-          Positioned(
-            top: 40,
-            left: 10,
-            child: IconButton(
-              icon: const Icon(Icons.close, size: 28),
-              onPressed: () {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ),
-
           // ✅ Background and Login Form
           Container(
             padding: const EdgeInsets.only(top: 100, left: 20, right: 20),
@@ -206,44 +197,21 @@ class _LogInScreenState extends State<LogInScreen> {
                             ),
                             child: const Text('Need an account'),
                           ),
-
-                          const SizedBox(height: 20),
-                          Row(
-                            children: const [
-                              Expanded(child: Divider()),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Text('or'),
-                              ),
-                              Expanded(child: Divider()),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1877F3),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                size: 28,
+                              ), // Changed to back arrow
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const HomePageScreen()),
+                                );
+                              },
                             ),
-                            onPressed: () {},
-                            icon: const Icon(Icons.facebook),
-                            label: const Text('Continue with Facebook'),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1DA1F2),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            onPressed: () {},
-                            icon: const Icon(Icons.alternate_email),
-                            label: const Text('Continue with Twitter'),
                           ),
                         ],
                       ),

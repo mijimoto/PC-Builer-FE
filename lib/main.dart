@@ -10,7 +10,7 @@ import 'user_profile_edit.dart';
 import 'item_batch.dart';
 import 'DetailScreen.dart';
 import 'InfoPartScreen.dart';
-import 'BuildPageScreen.dart'; // From the first file
+import 'AddItemPage.dart'; // From the first file
 
 void main() {
   runApp(const MyApp()); // ✅ Launch the app
@@ -30,15 +30,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       // ✅ Choose ONE to test at a time:
-      home: BuildPageScreen(),
+      //home: BuildPageScreen(),
       //home: LogInScreen(),
       //home: ForgotPasswordScreen(),
-      //home: HomePageScreen(),
+      home: HomePageScreen(),
       //home: SignUpScreen(),
       //home: AccountScreen(),
       //home: UserProfileEdit(),
       //home: ItemListPage(),
-      //home: InfoPartScreen(partName: 'CPU'),
+     //home: InfoPartScreen(partName: 'CPU'),
     );
   }
 }

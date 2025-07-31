@@ -19,7 +19,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Future<void> fetchApi() async {
     try {
-      final url = Uri.parse('http://10.0.2.2:8080/api/v1/${widget.itemName}');
+      final url = Uri.parse('http://localhost:8080/api/v1/${widget.itemName}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -29,14 +29,14 @@ class _DetailScreenState extends State<DetailScreen> {
           filteredList = data;
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to fetch API")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to fetch API")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
@@ -49,10 +49,12 @@ class _DetailScreenState extends State<DetailScreen> {
   void filterSearch(String query) {
     setState(() {
       filteredList = apiList
-          .where((item) => item['parts']['partname']
-          .toString()
-          .toLowerCase()
-          .contains(query.toLowerCase()))
+          .where(
+            (item) => item['parts']['partname']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()),
+          )
           .toList();
     });
   }
@@ -75,40 +77,40 @@ class _DetailScreenState extends State<DetailScreen> {
       body: apiList.isEmpty
           ? Center(child: CircularProgressIndicator())
           : Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Search part name...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: filterSearch,
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: filteredList.length,
-              itemBuilder: (context, index) {
-                final part = filteredList[index]['parts'];
-                return Card(
-                  margin: EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(part['partname']),
-                    subtitle: Text('Price: \$${part['partprice']}'),
-                    trailing: ElevatedButton(
-                      onPressed: () => selectPart(filteredList[index]),
-                      child: Text("Add"),
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search part name...',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
                     ),
+                    onChanged: filterSearch,
                   ),
-                );
-              },
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: filteredList.length,
+                    itemBuilder: (context, index) {
+                      final part = filteredList[index]['parts'];
+                      return Card(
+                        margin: EdgeInsets.all(8),
+                        child: ListTile(
+                          title: Text(part['partname']),
+                          subtitle: Text('Price: \$${part['partprice']}'),
+                          trailing: ElevatedButton(
+                            onPressed: () => selectPart(filteredList[index]),
+                            child: Text("Add"),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

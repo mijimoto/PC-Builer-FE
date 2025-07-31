@@ -1,8 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-<<<<<<< HEAD
  <uses-permission android:name="android.permission.INTERNET" />
-=======
->>>>>>> ae98357c01f35fba6cabc63a75af9dab7b85aedb
     <application
         android:label="pc_builder_fe"
         android:name="${applicationName}"

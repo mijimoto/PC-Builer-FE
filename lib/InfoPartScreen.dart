@@ -1,3 +1,5 @@
+
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +27,7 @@ class _InfoPartScreenState extends State<InfoPartScreen> {
   Future<void> fetchPartInfo() async {
     try {
       final response = await http.get(
-        Uri.parse("http://10.0.2.2:8080/api/v1/${widget.partName}"),
+        Uri.parse("http://localhost:8080/api/v1/${widget.partName}"),
       );
 
       if (response.statusCode == 200) {
@@ -70,3 +72,4 @@ class _InfoPartScreenState extends State<InfoPartScreen> {
     );
   }
 }
+

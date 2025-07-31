@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'log_in_page.dart';
 import 'dart:io'; // For exit()
+import 'dart:convert';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -20,9 +22,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _hoverSignUp = false;
   bool _hoverAlready = false;
 
-  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  final emailRegex = RegExp(r'^[\w-\.]+@gmail\.com$');
 
-  void _validateAndSubmit() {
+  Future<void> _validateAndSubmit() async {
     setState(() {
       _errorMessage = null;
     });
@@ -45,7 +47,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    debugPrint("Sign Up successful: $firstName, $email");
+    try {
+      // Gọi API đăng ký
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/signup'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'firstname': firstName,
+          'lastname': _lastNameController.text.trim(),
+          'email': email,
+          'passwordhased': password,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Hiển thị thông báo thành công
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Check your email. We have sent a verification mail'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LogInScreen()),
+        );
+      } else {
+        setState(() {
+          _errorMessage = 'Registered Failed';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Connection Failed';
+      });
+    }
   }
 
   @override

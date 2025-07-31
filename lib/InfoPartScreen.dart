@@ -70,3 +70,4 @@ class _InfoPartScreenState extends State<InfoPartScreen> {
     );
   }
 }
+

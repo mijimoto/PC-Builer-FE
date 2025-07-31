@@ -19,7 +19,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Future<void> fetchApi() async {
     try {
-      final url = Uri.parse('http://localhost:8080/api/v1/${widget.itemName}');
+      final url = Uri.parse('http://10.0.2.2:8080/api/v1/${widget.itemName}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -112,3 +112,4 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 }
+

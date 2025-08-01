@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_page.dart';
+import 'user_page.dart';
 import 'package:http/http.dart' as http; // For API calls
 import 'dart:convert'; // For JSON encoding
 
@@ -15,6 +16,9 @@ class _LogInScreenState extends State<LogInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _errorMessage;
+
+  // Biến tĩnh để lưu cookie
+  static String? _sessionCookie;
 
   @override
   void dispose() {
@@ -38,8 +42,9 @@ class _LogInScreenState extends State<LogInScreen> {
       return;
     }
 
+    http.Response? response;
     try {
-      final response = await http.post(
+      response = await http.post(
         Uri.parse('http://10.0.2.2:8080/api/v1/accounts/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
@@ -47,25 +52,49 @@ class _LogInScreenState extends State<LogInScreen> {
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
+      print('Response headers: ${response.headers}');
 
       if (response.statusCode == 200) {
-        // Giả định API trả về token hoặc thông tin người dùng khi đăng nhập thành công
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đăng nhập thành công!'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        // Có thể lưu token hoặc điều hướng đến màn hình chính (nếu có)
+        // Save cookie from header
+        _sessionCookie = response.headers['set-cookie'];
+        String? accountId;
+        if (_sessionCookie != null) {
+          // extract account id from cookie
+          final accountIdMatch = RegExp(
+            r'accountid=([\d]+)',
+          ).firstMatch(_sessionCookie!);
+          accountId = accountIdMatch?.group(1) ?? '';
+        }
+        if (accountId?.isNotEmpty ?? false) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logged In!'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserProfile(accountid: accountId!),
+            ),
+          );
+        } else {
+          setState(() {
+            _errorMessage = 'No account ID found in cookie';
+          });
+        }
       } else {
         setState(() {
-          _errorMessage = 'Log in Failed. Error Code: ${response.statusCode}';
+          _errorMessage = 'Log in Failed. Error Code: ${response?.statusCode}';
         });
       }
     } catch (e) {
+      if (response != null) {
+        print('Full response body: ${response.body}');
+      }
       setState(() {
         _errorMessage =
-            'Connecntion Failed: $e. Check server and internet connection.';
+            'Connection Failed: $e. Check server and internet connection.';
       });
     }
   }

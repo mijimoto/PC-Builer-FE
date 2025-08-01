@@ -131,7 +131,9 @@ class UserProfileEdit extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => UserProfile()),
+                      MaterialPageRoute(
+                        builder: (context) => UserProfile(accountid: ''),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -148,7 +150,9 @@ class UserProfileEdit extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => UserProfile()),
+                      MaterialPageRoute(
+                        builder: (context) => UserProfile(accountid: ''),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(

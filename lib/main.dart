@@ -30,11 +30,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       // ✅ Choose ONE to test at a time:
-      home: BuildPageScreen(),
+      //home: BuildPageScreen(),
       //home: LogInScreen(),
       //home: ForgotPasswordScreen(),
       //home: HomePageScreen(),
-      //home: SignUpScreen(),
+      home: SignUpScreen(),
       //home: AccountScreen(),
       //home: UserProfileEdit(),
       //home: ItemListPage(),

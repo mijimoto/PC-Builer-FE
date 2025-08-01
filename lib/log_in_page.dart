@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_page.dart';
+import 'user_page.dart';
 import 'package:http/http.dart' as http; // For API calls
 import 'dart:convert'; // For JSON encoding
 import 'home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({Key? key}) : super(key: key);
@@ -34,7 +36,7 @@ class _LogInScreenState extends State<LogInScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       setState(() {
-        _errorMessage = 'Required all password and username-email';
+        _errorMessage = 'Email and password are required';
       });
       return;
     }
@@ -46,31 +48,45 @@ class _LogInScreenState extends State<LogInScreen> {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login Successfully'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        // Navigate to HomePage
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePageScreen()),
-        );
-        // Có thể lưu token hoặc điều hướng đến màn hình chính (nếu có)
+        final data = jsonDecode(response.body);
+        final token = data['token'] as String?;
+        final accountId = data['accountId']?.toString();
+
+        if (token != null && accountId != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('jwt', token);
+          await prefs.setString('accountId', accountId);
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logged In!'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserProfile(accountid: accountId),
+            ),
+          );
+        } else {
+          setState(() {
+            _errorMessage = 'Invalid response from server';
+          });
+        }
       } else {
+        final errorData = jsonDecode(response.body);
         setState(() {
-          _errorMessage = 'Log in Failed. Error Code: ${response.statusCode}';
+          _errorMessage =
+              errorData['error'] ??
+              'Login failed with code ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage =
-            'Connecntion Failed: $e. Check server and internet connection.';
+        _errorMessage = 'Connection Failed: $e';
       });
     }
   }
@@ -116,7 +132,7 @@ class _LogInScreenState extends State<LogInScreen> {
                             decoration: const InputDecoration(
                               labelText: 'Email',
                               border: OutlineInputBorder(),
-                              errorText: null, // Xóa errorText mặc định
+                              errorText: null,
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -140,8 +156,6 @@ class _LogInScreenState extends State<LogInScreen> {
                                 ),
                               ),
                             ),
-
-                          // ✅ Forgot Password Navigation
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -156,7 +170,6 @@ class _LogInScreenState extends State<LogInScreen> {
                               child: const Text('Forgot password?'),
                             ),
                           ),
-
                           const SizedBox(height: 10),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -175,10 +188,7 @@ class _LogInScreenState extends State<LogInScreen> {
                             onPressed: _handleLogin,
                             child: const Text('Login'),
                           ),
-
                           const SizedBox(height: 16),
-
-                          // ✅ Sign Up Navigation
                           ElevatedButton(
                             onPressed: () {
                               Navigator.pushReplacement(
@@ -197,28 +207,28 @@ class _LogInScreenState extends State<LogInScreen> {
                             ),
                             child: const Text('Need an account'),
                           ),
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                size: 28,
-                              ), // Changed to back arrow
-                              onPressed: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const HomePageScreen()),
-                                );
-                              },
-                            ),
-                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
               ],
+            ),
+          ),
+          // Back Arrow Button
+          Positioned(
+            top: 0,
+            left: 0,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, size: 28),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePageScreen(),
+                  ),
+                );
+              },
             ),
           ),
         ],

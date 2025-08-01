@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'user_profile_edit.dart';
 import 'log_in_page.dart';
-import 'package:http/http.dart' as http; // For API calls
-import 'dart:convert'; // For JSON encoding
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class UserProfile extends StatefulWidget {
   final String accountid;
@@ -26,44 +27,92 @@ class _UserProfileState extends State<UserProfile> {
     _fetchUserData();
   }
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt'); // ✅ Fixed: Use 'jwt' key (same as login)
+  }
+
   Future<void> _fetchUserData() async {
     if (widget.accountid.isEmpty) {
       setState(() {
-        _errorMessage = 'Can not find account ID';
+        _errorMessage = 'Cannot find account ID';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final token = await _getToken();
+    if (token == null) {
+      setState(() {
+        _errorMessage = 'Token not found';
         _isLoading = false;
       });
       return;
     }
 
     try {
+      print('🔍 Making API call to: http://10.0.2.2:8080/api/v1/accounts/${widget.accountid}');
+      print('🔍 Using token: $token');
+      
+      // Call your backend's findById endpoint
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8080/api/v1/accounts/${widget.accountid}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      print('🔍 Response Status: ${response.statusCode}');
+      print('🔍 Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final jsonData = jsonDecode(response.body);
+        print('🔍 Parsed JSON: $jsonData');
+        
         setState(() {
-          _firstName = data['firstname'] ?? _firstName;
-          _lastName = data['lastname'] ?? _lastName;
-          _email = data['email'] ?? _email;
+          // Match the fields from your AccountsDTO
+          _firstName = jsonData['firstname'] ?? jsonData['firstName'] ?? 'Unknown';
+          _lastName = jsonData['lastname'] ?? jsonData['lastName'] ?? '';
+          _email = jsonData['email'] ?? '';
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      } else if (response.statusCode == 404) {
+        setState(() {
+          _errorMessage = 'User not found';
+          _isLoading = false;
+        });
+      } else if (response.statusCode == 401) {
+        setState(() {
+          _errorMessage = 'Unauthorized - Invalid token';
           _isLoading = false;
         });
       } else {
         setState(() {
-          _errorMessage = 'Fetching Error. Error Code: ${response.statusCode}';
+          _errorMessage = 'Failed to fetch user data. Status: ${response.statusCode}';
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Connenction Error: $e';
+        _errorMessage = 'Connection Error: $e';
         _isLoading = false;
       });
+      print('🔍 Error: $e');
     }
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt'); // Clear the token
+    await prefs.remove('account_id'); // Clear account ID if stored
+    
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LogInScreen()),
+      (Route<dynamic> route) => false,
+    );
   }
 
   @override
@@ -180,13 +229,7 @@ class _UserProfileState extends State<UserProfile> {
                   ),
                   SizedBox(height: 10),
                   TextButton(
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => LogInScreen()),
-                        (Route<dynamic> route) => false,
-                      );
-                    },
+                    onPressed: _logout, // ✅ Fixed: Use proper logout function
                     child: Text(
                       'Log Out',
                       style: TextStyle(color: Color(0xFFB0BEC5)),

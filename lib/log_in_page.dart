@@ -4,6 +4,8 @@ import 'forgot_password_page.dart';
 import 'user_page.dart';
 import 'package:http/http.dart' as http; // For API calls
 import 'dart:convert'; // For JSON encoding
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({Key? key}) : super(key: key);
@@ -17,8 +19,6 @@ class _LogInScreenState extends State<LogInScreen> {
   final _passwordController = TextEditingController();
   String? _errorMessage;
 
-  // Biến tĩnh để lưu cookie
-  static String? _sessionCookie;
 
   @override
   void dispose() {
@@ -27,7 +27,7 @@ class _LogInScreenState extends State<LogInScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+ Future<void> _handleLogin() async {
     setState(() {
       _errorMessage = null;
     });
@@ -37,64 +37,57 @@ class _LogInScreenState extends State<LogInScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       setState(() {
-        _errorMessage = 'Required all password and username-email';
+        _errorMessage = 'Email and password are required';
       });
       return;
     }
 
-    http.Response? response;
     try {
-      response = await http.post(
+      final response = await http.post(
         Uri.parse('http://10.0.2.2:8080/api/v1/accounts/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      print('Response headers: ${response.headers}');
-
       if (response.statusCode == 200) {
-        // Save cookie from header
-        _sessionCookie = response.headers['set-cookie'];
-        String? accountId;
-        if (_sessionCookie != null) {
-          // extract account id from cookie
-          final accountIdMatch = RegExp(
-            r'accountid=([\d]+)',
-          ).firstMatch(_sessionCookie!);
-          accountId = accountIdMatch?.group(1) ?? '';
-        }
-        if (accountId?.isNotEmpty ?? false) {
+        final data = jsonDecode(response.body);
+        final token = data['token'] as String?;
+        final accountId = data['accountId']?.toString();
+
+        if (token != null && accountId != null) {
+          // Save JWT token
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('jwt', token);
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Logged In!'),
               duration: Duration(seconds: 2),
             ),
           );
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => UserProfile(accountid: accountId!),
+              builder: (context) => UserProfile(
+                accountid: accountId,
+              ),
             ),
           );
         } else {
           setState(() {
-            _errorMessage = 'No account ID found in cookie';
+            _errorMessage = 'Invalid response from server';
           });
         }
       } else {
+        final errorData = jsonDecode(response.body);
         setState(() {
-          _errorMessage = 'Log in Failed. Error Code: ${response?.statusCode}';
+          _errorMessage = errorData['error'] ?? 'Login failed with code ${response.statusCode}';
         });
       }
     } catch (e) {
-      if (response != null) {
-        print('Full response body: ${response.body}');
-      }
       setState(() {
-        _errorMessage =
-            'Connection Failed: $e. Check server and internet connection.';
+        _errorMessage = 'Connection Failed: $e';
       });
     }
   }

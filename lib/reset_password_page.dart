@@ -1,76 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'reset_password_page.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ResetPasswordPage extends StatefulWidget {
+  final String token;
+
+  ResetPasswordPage({required this.token});
+
   @override
-  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
+  _ResetPasswordPageState createState() => _ResetPasswordPageState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _emailController = TextEditingController();
+class _ResetPasswordPageState extends State<ResetPasswordPage> {
+  final _newPasswordController = TextEditingController();
   String? _errorMessage;
   bool _isLoading = false;
+  late String _token; // Lưu token từ widget
 
-  Future<void> _sendResetLink() async {
+  @override
+  void initState() {
+    super.initState();
+    _token = widget.token; // Gán token từ constructor
+  }
+
+  Future<void> _resetPassword() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final email = _emailController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
 
-    if (email.isEmpty ||
-        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+    if (newPassword.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter a valid email';
+        _errorMessage = 'Please enter new password';
         _isLoading = false;
       });
       return;
     }
 
     try {
-      final uri = Uri.parse(
-        'http://10.0.2.2:8080/api/v1/accounts/reset-password/request',
-      ).replace(queryParameters: {'email': email});
-      print('Request URI: $uri');
+      final requestBody = jsonEncode({
+        'token': _token,
+        'newPassword': newPassword,
+      });
+      print('Request body: $requestBody');
       final response = await http.post(
-        uri,
+        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/reset-password'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        body: requestBody,
       );
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
       if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        final token =
-            responseBody['token'] ?? responseBody['Token'] ?? response.body;
-        if (token != null && token.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Check your email for a verification token'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ResetPasswordPage(token: token),
-            ),
-          );
-        } else {
-          setState(() {
-            _errorMessage = 'Invalid token received from server';
-            _isLoading = false;
-          });
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset successfully'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       } else {
         setState(() {
           _errorMessage =
-              'Failed to request reset. Status: ${response.statusCode}, Body: ${response.body}';
+              'Failed to reset password. Status: ${response.statusCode}, Body: ${response.body}';
           _isLoading = false;
         });
       }
@@ -84,7 +80,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _newPasswordController.dispose();
     super.dispose();
   }
 
@@ -108,7 +104,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              'Forgot Password?',
+              'Reset Password',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -117,9 +113,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             SizedBox(height: 20),
             TextField(
-              controller: _emailController,
+              controller: TextEditingController(text: _token), // Hiển thị token
+              enabled: false, // Không cho sửa token
               decoration: InputDecoration(
-                labelText: 'Email',
+                labelText: 'Verification Token',
                 border: OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
@@ -130,16 +127,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
             ),
             SizedBox(height: 20),
+            TextField(
+              controller: _newPasswordController,
+              decoration: InputDecoration(
+                labelText: 'New Password',
+                border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: const Color.fromARGB(255, 105, 104, 104),
+                  ),
+                ),
+              ),
+              obscureText: true,
+            ),
+            SizedBox(height: 20),
             _isLoading
                 ? CircularProgressIndicator()
                 : ElevatedButton(
-                    onPressed: _sendResetLink,
+                    onPressed: _resetPassword,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF800080),
                       minimumSize: Size(double.infinity, 50),
                     ),
                     child: Text(
-                      'Send Reset Link',
+                      'Reset Password',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),

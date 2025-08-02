@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'log_in_page.dart';
-import 'BuildPage.dart'; // Updated import name
+import 'HomeBuildPage.dart'; // Updated import name
 import 'user_page.dart'; // Import UserProfile
 
 class PCBuilderApp extends StatelessWidget {
-  const PCBuilderApp({Key? key}) : super(key: key); // Added default constructor
+  const PCBuilderApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +18,33 @@ class PCBuilderApp extends StatelessWidget {
   }
 }
 
-class HomePageScreen extends StatelessWidget {
+class HomePageScreen extends StatefulWidget {
   const HomePageScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomePageScreen> createState() => _HomePageScreenState();
+}
+
+class _HomePageScreenState extends State<HomePageScreen> {
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final token = await _getToken();
+    setState(() {
+      _isLoggedIn = token != null;
+    });
+  }
+
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,11 +94,24 @@ class HomePageScreen extends StatelessWidget {
               _buildMenuItem(
                 icon: Icons.account_circle,
                 title: 'Account',
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => UserProfile()),
-                  );
+                onTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final accountId = prefs.getString('accountId');
+                  if (accountId != null) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserProfile(accountid: accountId),
+                      ),
+                    );
+                  } else {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LogInScreen(),
+                      ),
+                    );
+                  }
                 },
               ),
             ],
@@ -126,36 +165,38 @@ class HomePageScreen extends StatelessWidget {
                       ),
                       child: Stack(
                         children: [
-                          Positioned(
-                            top: 20,
-                            right: 20,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => LogInScreen(),
+                          if (!_isLoggedIn)
+                            Positioned(
+                              top: 20,
+                              right: 20,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LogInScreen(),
+                                    ),
+                                  );
+                                  await _checkLoginStatus(); // Refresh login status
+                                },
+                                child: Text(
+                                  'Login',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color.fromARGB(
+                                    255,
+                                    166,
+                                    134,
+                                    221,
                                   ),
-                                );
-                              },
-                              child: Text(
-                                'Login',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color.fromARGB(
-                                  255,
-                                  166,
-                                  134,
-                                  221,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  elevation: 5,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                elevation: 5,
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),

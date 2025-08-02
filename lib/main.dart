@@ -10,6 +10,7 @@ import 'user_profile_edit.dart';
 import 'item_batch.dart';
 import 'DetailScreen.dart';
 import 'InfoPartScreen.dart';
+import 'HomeBuildPage.dart';
 import 'AddItemPage.dart'; // From the first file
 
 void main() {

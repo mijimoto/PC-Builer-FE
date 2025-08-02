@@ -4,8 +4,8 @@ import 'forgot_password_page.dart';
 import 'user_page.dart';
 import 'package:http/http.dart' as http; // For API calls
 import 'dart:convert'; // For JSON encoding
+import 'home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({Key? key}) : super(key: key);
@@ -19,7 +19,6 @@ class _LogInScreenState extends State<LogInScreen> {
   final _passwordController = TextEditingController();
   String? _errorMessage;
 
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -27,7 +26,7 @@ class _LogInScreenState extends State<LogInScreen> {
     super.dispose();
   }
 
- Future<void> _handleLogin() async {
+  Future<void> _handleLogin() async {
     setState(() {
       _errorMessage = null;
     });
@@ -55,10 +54,10 @@ class _LogInScreenState extends State<LogInScreen> {
         final accountId = data['accountId']?.toString();
 
         if (token != null && accountId != null) {
-          // Save JWT token
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('jwt', token);
-
+          await prefs.setString('accountId', accountId);
+          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Logged In!'),
@@ -69,9 +68,7 @@ class _LogInScreenState extends State<LogInScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => UserProfile(
-                accountid: accountId,
-              ),
+              builder: (context) => UserProfile(accountid: accountId),
             ),
           );
         } else {
@@ -82,7 +79,9 @@ class _LogInScreenState extends State<LogInScreen> {
       } else {
         final errorData = jsonDecode(response.body);
         setState(() {
-          _errorMessage = errorData['error'] ?? 'Login failed with code ${response.statusCode}';
+          _errorMessage =
+              errorData['error'] ??
+              'Login failed with code ${response.statusCode}';
         });
       }
     } catch (e) {
@@ -97,20 +96,6 @@ class _LogInScreenState extends State<LogInScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // ✅ X (Close) Button
-          Positioned(
-            top: 40,
-            left: 10,
-            child: IconButton(
-              icon: const Icon(Icons.close, size: 28),
-              onPressed: () {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ),
-
           // ✅ Background and Login Form
           Container(
             padding: const EdgeInsets.only(top: 100, left: 20, right: 20),
@@ -147,7 +132,7 @@ class _LogInScreenState extends State<LogInScreen> {
                             decoration: const InputDecoration(
                               labelText: 'Email',
                               border: OutlineInputBorder(),
-                              errorText: null, // Xóa errorText mặc định
+                              errorText: null,
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -171,8 +156,6 @@ class _LogInScreenState extends State<LogInScreen> {
                                 ),
                               ),
                             ),
-
-                          // ✅ Forgot Password Navigation
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -187,7 +170,6 @@ class _LogInScreenState extends State<LogInScreen> {
                               child: const Text('Forgot password?'),
                             ),
                           ),
-
                           const SizedBox(height: 10),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -206,10 +188,7 @@ class _LogInScreenState extends State<LogInScreen> {
                             onPressed: _handleLogin,
                             child: const Text('Login'),
                           ),
-
                           const SizedBox(height: 16),
-
-                          // ✅ Sign Up Navigation
                           ElevatedButton(
                             onPressed: () {
                               Navigator.pushReplacement(
@@ -228,51 +207,28 @@ class _LogInScreenState extends State<LogInScreen> {
                             ),
                             child: const Text('Need an account'),
                           ),
-
-                          const SizedBox(height: 20),
-                          Row(
-                            children: const [
-                              Expanded(child: Divider()),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Text('or'),
-                              ),
-                              Expanded(child: Divider()),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1877F3),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            onPressed: () {},
-                            icon: const Icon(Icons.facebook),
-                            label: const Text('Continue with Facebook'),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1DA1F2),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            onPressed: () {},
-                            icon: const Icon(Icons.alternate_email),
-                            label: const Text('Continue with Twitter'),
-                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
               ],
+            ),
+          ),
+          // Back Arrow Button
+          Positioned(
+            top: 0,
+            left: 0,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, size: 28),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePageScreen(),
+                  ),
+                );
+              },
             ),
           ),
         ],

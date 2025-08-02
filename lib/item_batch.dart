@@ -15,7 +15,7 @@ class _ItemListPageState extends State<ItemListPage> {
   }
 
   Future<void> fetchItems() async {
-   await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(seconds: 1));
     setState(() {
       items = ['Item 1', 'Item 2', 'Item 3'];
     });
@@ -46,7 +46,6 @@ class _ItemListPageState extends State<ItemListPage> {
             spacing: 10,
             children: [
               TextButton(onPressed: () {}, child: Text('Home')),
-              TextButton(onPressed: () {}, child: Text('Search')),
               TextButton(onPressed: () {}, child: Text('Build')),
               TextButton(onPressed: () {}, child: Text('Account')),
             ],
@@ -55,7 +54,6 @@ class _ItemListPageState extends State<ItemListPage> {
       ),
       body: Column(
         children: [
-
           // Search Bar
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -82,7 +80,10 @@ class _ItemListPageState extends State<ItemListPage> {
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       return Card(
-                        margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        margin: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         child: Padding(
                           padding: EdgeInsets.all(10),
                           child: Row(
@@ -94,9 +95,7 @@ class _ItemListPageState extends State<ItemListPage> {
                                 child: Icon(Icons.image),
                               ),
                               SizedBox(width: 10),
-                              Expanded(
-                                child: Text(items[index]),
-                              ),
+                              Expanded(child: Text(items[index])),
                               ElevatedButton(
                                 onPressed: () {
                                   // Add your add item logic here
@@ -120,7 +119,7 @@ class _ItemListPageState extends State<ItemListPage> {
               icon: Icon(Icons.add),
               label: Text("Add New Item"),
             ),
-          )
+          ),
         ],
       ),
 

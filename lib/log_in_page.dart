@@ -17,6 +17,8 @@ class LogInScreen extends StatefulWidget {
 class _LogInScreenState extends State<LogInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
   String? _errorMessage;
   bool _isLoading = false;
 
@@ -27,24 +29,26 @@ class _LogInScreenState extends State<LogInScreen> {
     super.dispose();
   }
 
+  bool _isValidEmail(String email) {
+    // Simple email regex
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
+  }
+
   Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _errorMessage = null;
+      _isLoading = true;
     });
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      setState(() {
-        _errorMessage = 'Email and password are required';
-      });
-      return;
-    }
-
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/v1/accounts/login'),
+        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
@@ -58,12 +62,9 @@ class _LogInScreenState extends State<LogInScreen> {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('jwt', token);
           await prefs.setString('accountId', accountId);
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Logged In!'),
-              duration: Duration(seconds: 2),
-            ),
+            const SnackBar(content: Text('Logged In!')),
           );
 
           Navigator.pushReplacement(
@@ -89,6 +90,10 @@ class _LogInScreenState extends State<LogInScreen> {
       setState(() {
         _errorMessage = 'Connection Failed: $e';
       });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -109,7 +114,7 @@ class _LogInScreenState extends State<LogInScreen> {
               ),
             ),
             child: _isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : Column(
                     children: [
                       const Padding(
@@ -127,101 +132,123 @@ class _LogInScreenState extends State<LogInScreen> {
                         child: SingleChildScrollView(
                           child: Padding(
                             padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                TextField(
-                                  controller: _emailController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Email',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextFormField(
+                                    controller: _emailController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Email',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white.withOpacity(0.9),
                                     ),
-                                    filled: true,
-                                    fillColor: Colors.white.withOpacity(0.9),
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty) {
+                                        return 'Email is required';
+                                      }
+                                      if (!_isValidEmail(value.trim())) {
+                                        return 'Enter a valid email';
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                ),
-                                const SizedBox(height: 10),
-                                TextField(
-                                  controller: _passwordController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                  const SizedBox(height: 10),
+                                  TextFormField(
+                                    controller: _passwordController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Password',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white.withOpacity(0.9),
                                     ),
-                                    filled: true,
-                                    fillColor: Colors.white.withOpacity(0.9),
+                                    obscureText: true,
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty) {
+                                        return 'Password is required';
+                                      }
+                                      if (value.trim().length < 1) {
+                                        return 'Password must be at least 1 characters';
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                  obscureText: true,
-                                ),
-                                if (_errorMessage != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: Text(
-                                      _errorMessage!,
-                                      style: const TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 12,
+                                  if (_errorMessage != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 10),
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () {
+                                        print('LogInScreen: Navigating to ForgotPasswordScreen');
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => ForgotPasswordScreen(),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text(
+                                        'Forgot password?',
+                                        style: TextStyle(color: Color(0xFFB0BEC5)),
                                       ),
                                     ),
                                   ),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: () {
-                                      print('LogInScreen: Navigating to ForgotPasswordScreen');
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => ForgotPasswordScreen(),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text(
-                                      'Forgot password?',
-                                      style: TextStyle(color: Color(0xFFB0BEC5)),
+                                  const SizedBox(height: 10),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF800080),
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size(double.infinity, 50),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      elevation: 2,
                                     ),
+                                    onPressed: _isLoading ? null : _handleLogin,
+                                    child: const Text('Login'),
                                   ),
-                                ),
-                                const SizedBox(height: 10),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF800080),
-                                    foregroundColor: Colors.white,
-                                    minimumSize: Size(double.infinity, 50),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : () {
+                                            print('LogInScreen: Navigating to SignUpScreen');
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => const SignUpScreen(),
+                                              ),
+                                            );
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          const Color.fromARGB(255, 166, 134, 221),
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size(double.infinity, 50),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      elevation: 2,
                                     ),
-                                    elevation: 2,
+                                    child: const Text('Need an account'),
                                   ),
-                                  onPressed: _isLoading ? null : _handleLogin,
-                                  child: const Text('Login'),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _isLoading
-                                      ? null
-                                      : () {
-                                          print('LogInScreen: Navigating to SignUpScreen');
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => const SignUpScreen(),
-                                            ),
-                                          );
-                                        },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color.fromARGB(255, 166, 134, 221),
-                                    foregroundColor: Colors.white,
-                                    minimumSize: Size(double.infinity, 50),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    elevation: 2,
-                                  ),
-                                  child: const Text('Need an account'),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

@@ -55,7 +55,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     try {
       // Gọi API đăng ký
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/v1/accounts/signup'),
+        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'firstname': firstName,

@@ -73,7 +73,7 @@ class _BuildPageScreenState extends State<BuildPageScreen> {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => UserProfile()),
+                  MaterialPageRoute(builder: (context) => UserProfile(accountid: '',)),
                 );
               },
               child: Text(

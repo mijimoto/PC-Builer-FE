@@ -102,7 +102,7 @@ Future<void> _fetchExistingComponents() async {
   try {
     final response = await http
         .get(
-          Uri.parse('http://10.0.2.2:8080/api/v1/pcbuild/pc/${widget.buildId}'),
+          Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcbuild/pc/${widget.buildId}'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -251,7 +251,7 @@ Future<void> _fetchExistingComponents() async {
         print('AddItemScreen: Saving component: ${jsonEncode(payload)}');
 
         final response = await http.post(
-          Uri.parse('http://10.0.2.2:8080/api/v1/pcbuild'),
+          Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcbuild'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -302,7 +302,7 @@ Future<void> _fetchExistingComponents() async {
     try {
       for (var build in _savedBuilds) {
         final response = await http.delete(
-          Uri.parse('http://10.0.2.2:8080/api/v1/pcbuild/${build['pcid']}/${build['partid']}'),
+          Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcbuild/${build['pcid']}/${build['partid']}'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',

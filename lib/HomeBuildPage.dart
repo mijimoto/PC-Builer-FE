@@ -69,9 +69,9 @@ class _BuildPageScreenState extends State<BuildPageScreen> {
     }
 
     try {
-      print('BuildPageScreen: Sending GET to http://10.0.2.2:8080/api/v1/pcs');
+      print('BuildPageScreen: Sending GET to https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcs');
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/api/v1/pcs'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcs'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -174,7 +174,7 @@ class _BuildPageScreenState extends State<BuildPageScreen> {
       print('BuildPageScreen: _createNewPC sending payload: ${jsonEncode(payload)}');
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/api/v1/pcs'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcs'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -252,9 +252,9 @@ class _BuildPageScreenState extends State<BuildPageScreen> {
     }
 
     try {
-      print('BuildPageScreen: Sending DELETE to http://10.0.2.2:8080/api/v1/pcs/${builds[index]['pcid']}');
+      print('BuildPageScreen: Sending DELETE to https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcs/${builds[index]['pcid']}');
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:8080/api/v1/pcs/${builds[index]['pcid']}'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/pcs/${builds[index]['pcid']}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

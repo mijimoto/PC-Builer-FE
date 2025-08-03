@@ -41,7 +41,7 @@ class _UserProfileEditState extends State<UserProfileEdit> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/${widget.accountid}'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/${widget.accountid}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -99,7 +99,7 @@ class _UserProfileEditState extends State<UserProfileEdit> {
 
     try {
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/${widget.accountid}'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/${widget.accountid}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

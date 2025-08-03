@@ -48,7 +48,7 @@ class _LogInScreenState extends State<LogInScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/login'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );

@@ -69,9 +69,9 @@ class _UserProfileState extends State<UserProfile> {
     }
 
     try {
-      print('UserProfile: Sending GET to http://10.0.2.2:8080/api/v1/accounts/${widget.accountid}');
+      print('UserProfile: Sending GET to https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/${widget.accountid}');
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/${widget.accountid}'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/${widget.accountid}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -154,9 +154,9 @@ class _UserProfileState extends State<UserProfile> {
     }
 
     try {
-      print('UserProfile: Sending POST to http://10.0.2.2:8080/api/v1/accounts/logout');
+      print('UserProfile: Sending POST to https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/logout');
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/api/v1/accounts/logout'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/logout'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

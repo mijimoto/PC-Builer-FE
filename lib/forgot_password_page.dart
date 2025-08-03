@@ -32,7 +32,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final uri = Uri.parse(
-        'http://10.0.2.2:8080/api/v1/accounts/reset-password/request',
+        'https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/reset-password/request',
       ).replace(queryParameters: {'email': email});
       print('Request URI: $uri');
 

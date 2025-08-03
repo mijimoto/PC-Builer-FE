@@ -41,7 +41,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
     try {
       final uri = Uri.parse(
-        'http://10.0.2.2:8080/api/v1/accounts/reset-password',
+        'https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/reset-password',
       ).replace(queryParameters: {'token': _token, 'newPassword': newPassword});
 
       print('Request URI: $uri');

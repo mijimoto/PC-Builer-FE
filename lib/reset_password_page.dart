@@ -1,30 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'reset_password_page.dart';
+import 'log_in_page.dart'; //
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ResetPasswordPage extends StatefulWidget {
+  final String token;
+
+  ResetPasswordPage({required this.token});
+
   @override
-  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
+  _ResetPasswordPageState createState() => _ResetPasswordPageState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _emailController = TextEditingController();
+class _ResetPasswordPageState extends State<ResetPasswordPage> {
+  final _newPasswordController = TextEditingController();
   String? _errorMessage;
   bool _isLoading = false;
+  late String _token; // Lưu token từ widget
 
-  Future<void> _sendResetLink() async {
+  @override
+  void initState() {
+    super.initState();
+    _token = widget.token; // Gán token từ constructor
+  }
+
+  Future<void> _resetPassword() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final email = _emailController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
 
-    if (email.isEmpty ||
-        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+    if (newPassword.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter a valid email';
+        _errorMessage = 'Please enter new password';
         _isLoading = false;
       });
       return;
@@ -32,76 +41,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final uri = Uri.parse(
-        'https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/reset-password/request',
-      ).replace(queryParameters: {'email': email});
+        'https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/reset-password',
+      ).replace(queryParameters: {'token': _token, 'newPassword': newPassword});
+
       print('Request URI: $uri');
 
       final response = await http.post(
         uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Accept': 'application/json'},
       );
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        bool isJson = response.headers['content-type']?.contains('application/json') ?? false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset successfully'),
+            duration: Duration(seconds: 3),
+          ),
+        );
 
-        if (isJson) {
-          try {
-            final responseBody = jsonDecode(response.body);
-            final token = responseBody['token'] ?? responseBody['Token'];
-
-            if (token != null && token.isNotEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Check your email for a verification token'),
-                  duration: Duration(seconds: 3),
-                ),
-              );
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ResetPasswordPage(token: token),
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Check your email for reset instructions'),
-                  duration: Duration(seconds: 3),
-                ),
-              );
-              Navigator.pop(context);
-            }
-          } catch (e) {
-            print('JSON parsing failed: $e');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Check your email for reset instructions'),
-                duration: Duration(seconds: 3),
-              ),
-            );
-            Navigator.pop(context);
-          }
-        } else {
-          // Backend sent plain text instead of JSON
-          print('Plain response: ${response.body}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Check your email for reset instructions'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-          Navigator.pop(context); // Go back to login
-        }
+        // Navigate directly to LoginScreen instead of a named route
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => LogInScreen()),
+          (route) => false,
+        );
       } else {
         setState(() {
           _errorMessage =
-              'Failed to request reset. Status: ${response.statusCode}, Body: ${response.body}';
+              'Failed to reset password. Status: ${response.statusCode}, Body: ${response.body}';
           _isLoading = false;
         });
       }
@@ -115,11 +85,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _newPasswordController.dispose();
     super.dispose();
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
@@ -134,15 +104,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             child: Center(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      padding: EdgeInsets.fromLTRB(
+                        30,
+                        40,
+                        30,
+                        30 + MediaQuery.of(context).viewInsets.bottom,
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const Text(
-                            'Forgot Password?',
+                            'Reset Password',
                             style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.bold,
@@ -150,17 +125,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 30),
                           TextField(
-                            controller: _emailController,
+                            controller: TextEditingController(text: _token),
+                            enabled: false,
                             decoration: InputDecoration(
-                              labelText: 'Email',
+                              labelText: 'Verification Token',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.9),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             ),
+                          ),
+                          const SizedBox(height: 30),
+                          TextField(
+                            controller: _newPasswordController,
+                            decoration: InputDecoration(
+                              labelText: 'New Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.9),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            ),
+                            obscureText: true,
                           ),
                           if (_errorMessage != null)
                             Padding(
@@ -174,27 +165,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 30),
                           ElevatedButton(
-                            onPressed: _isLoading ? null : _sendResetLink,
+                            onPressed: _isLoading ? null : _resetPassword,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF800080),
+                              backgroundColor: const Color(0xFF800080),
                               foregroundColor: Colors.white,
-                              minimumSize: Size(double.infinity, 50),
+                              minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               elevation: 2,
                             ),
                             child: const Text(
-                              'Send Reset Link',
+                              'Reset Password',
                               style: TextStyle(fontSize: 16),
                             ),
                           ),
                           const SizedBox(height: 10),
                           TextButton(
                             onPressed: () {
-                              Navigator.pop(context);
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const LogInScreen()),
+                              );
                             },
                             child: const Text(
                               'Back to Sign In',

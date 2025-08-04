@@ -41,7 +41,7 @@ class _UserProfileEditState extends State<UserProfileEdit> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/v1/accounts/${widget.accountid}'),
+        Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/${widget.accountid}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -83,61 +83,62 @@ class _UserProfileEditState extends State<UserProfileEdit> {
     return prefs.getString('accountId');
   }
 
-  Future<void> _saveProfile() async {
-    final token = await _getToken();
-    if (token == null) {
-      setState(() {
-        _errorMessage = 'Please login first';
-      });
-      return;
-    }
-
+Future<void> _saveProfile() async {
+  final token = await _getToken();
+  if (token == null) {
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _errorMessage = 'Please login first';
     });
+    return;
+  }
 
-    try {
-      final response = await http.put(
-        Uri.parse('http://localhost:8080/api/v1/accounts/${widget.accountid}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'firstname': _firstNameController.text.trim(),
-          'lastname': _lastNameController.text.trim(),
-          'email': _emailController.text.trim(),
-        }),
-      ).timeout(Duration(seconds: 10));
+  setState(() {
+    _isLoading = true;
+    _errorMessage = null;
+  });
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UserProfile(accountid: widget.accountid),
-          ),
-        );
-      } else {
-        setState(() {
-          _errorMessage =
-              'Failed to update profile: ${response.statusCode} - ${response.body}';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
+  try {
+    final response = await http.patch( // 🔹 change PUT to PATCH
+      Uri.parse('https://pcbuilder-546878159726.asia-east1.run.app/api/v1/accounts/${widget.accountid}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'firstname': _firstNameController.text.trim(),
+        'lastname': _lastNameController.text.trim(),
+        'email': _emailController.text.trim(),
+      }),
+    ).timeout(Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserProfile(accountid: widget.accountid),
+        ),
+      );
+    } else {
       setState(() {
-        _errorMessage = 'Connection Error: ${e.toString()}';
+        _errorMessage =
+            'Failed to update profile: ${response.statusCode} - ${response.body}';
         _isLoading = false;
       });
     }
+  } catch (e) {
+    setState(() {
+      _errorMessage = 'Connection Error: ${e.toString()}';
+      _isLoading = false;
+    });
   }
+}
+
 
   @override
   void dispose() {

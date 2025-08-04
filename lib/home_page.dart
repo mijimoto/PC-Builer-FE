@@ -159,7 +159,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
                         image: DecorationImage(
-                          image: AssetImage('assets/background.png'),
+                          image: AssetImage('assets/background.jpg'),
                           fit: BoxFit.cover,
                         ),
                       ),

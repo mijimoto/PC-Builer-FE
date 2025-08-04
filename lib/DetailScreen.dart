@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailScreen extends StatefulWidget {
   final String itemName;
@@ -17,10 +18,28 @@ class _DetailScreenState extends State<DetailScreen> {
   List<dynamic> filteredList = [];
   TextEditingController searchController = TextEditingController();
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt');
+  }
+
   Future<void> fetchApi() async {
     try {
-      final url = Uri.parse('http://localhost:8080/api/v1/${widget.itemName}');
-      final response = await http.get(url);
+      final token = await _getToken();
+      final url = Uri.parse(
+          'https://pcbuilder-546878159726.asia-east1.run.app/api/v1/${widget.itemName}');
+
+      final response = await http.get(
+        url,
+        headers: token != null
+            ? {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              }
+            : {
+                'Content-Type': 'application/json',
+              },
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -29,14 +48,14 @@ class _DetailScreenState extends State<DetailScreen> {
           filteredList = data;
         });
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to fetch API")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to fetch API: ${response.statusCode}")),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     }
   }
 
@@ -75,14 +94,14 @@ class _DetailScreenState extends State<DetailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text("Choose ${widget.itemName}")),
       body: apiList.isEmpty
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: TextField(
                     controller: searchController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Search part name...',
                       prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(),
@@ -96,13 +115,13 @@ class _DetailScreenState extends State<DetailScreen> {
                     itemBuilder: (context, index) {
                       final part = filteredList[index]['parts'];
                       return Card(
-                        margin: EdgeInsets.all(8),
+                        margin: const EdgeInsets.all(8),
                         child: ListTile(
                           title: Text(part['partname']),
                           subtitle: Text('Price: \$${part['partprice']}'),
                           trailing: ElevatedButton(
                             onPressed: () => selectPart(filteredList[index]),
-                            child: Text("Add"),
+                            child: const Text("Add"),
                           ),
                         ),
                       );

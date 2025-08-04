@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class InfoPartScreen extends StatefulWidget {
   final String partName;
@@ -22,10 +23,27 @@ class _InfoPartScreenState extends State<InfoPartScreen> {
     fetchPartInfo();
   }
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt');
+  }
+
   Future<void> fetchPartInfo() async {
     try {
+      final token = await _getToken();
+
       final response = await http.get(
-        Uri.parse("http://localhost:8080/api/v1/${widget.partName}"),
+        Uri.parse(
+          "https://pcbuilder-546878159726.asia-east1.run.app/api/v1/${widget.partName}",
+        ),
+        headers: token != null
+            ? {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              }
+            : {
+                'Content-Type': 'application/json',
+              },
       );
 
       if (response.statusCode == 200) {
@@ -53,20 +71,20 @@ class _InfoPartScreenState extends State<InfoPartScreen> {
     return Scaffold(
       appBar: AppBar(title: Text("${widget.partName.toUpperCase()} Info")),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : hasError
-          ? Center(child: Text("Failed to load part info."))
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: partInfo!.entries.map((entry) {
-            return ListTile(
-              title: Text(entry.key),
-              subtitle: Text(entry.value.toString()),
-            );
-          }).toList(),
-        ),
-      ),
+              ? const Center(child: Text("Failed to load part info."))
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ListView(
+                    children: partInfo!.entries.map((entry) {
+                      return ListTile(
+                        title: Text(entry.key),
+                        subtitle: Text(entry.value.toString()),
+                      );
+                    }).toList(),
+                  ),
+                ),
     );
   }
 }
